@@ -1,0 +1,30 @@
+services:
+  codesys:
+    restart: always
+    build:
+      context: .
+      args:
+        C4_USER: ${CODESYS_USER:-christian}
+        C4_PASSWORD: ${CODESYS_PASSWORD:-changeme}
+    image: codesys4
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.codesys.loadbalancer.server.port=8080"
+      - "traefik.http.routers.codesys.rule=Host(`${CODESYS_DOMAIN}`)"
+      - "traefik.http.routers.codesys.entrypoints=websecure"
+      - "traefik.http.routers.codesys.tls=true"
+      - "traefik.http.routers.codesys.tls.certresolver=letsencrypt"
+    volumes:
+      - codesys_data:/var/opt/codesys-4
+      - ${CODESYS_PROJECTS_DIR:-./projects}:/home/${CODESYS_USER:-christian}/projects
+    networks:
+      - codesys_net
+
+volumes:
+  codesys_data:
+
+networks:
+  codesys_net:
+    # https://docs.docker.com/compose/networking/#use-a-pre-existing-network
+    name: infrastructure_default
+    external: true
